@@ -18,6 +18,7 @@ import BookingModal from '@/components/bookings/BookingModal';
 import RoomMembersModal from '@/components/rooms/RoomMembersModal';
 import { RoomHeader } from '@/components/rooms/RoomHeader';
 import { BookingSchedule } from '@/components/bookings/BookingSchedule';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { getRoomRole } from '@/lib/roles';
 import { getApiErrorMessage } from '@/lib/error';
 
@@ -44,12 +45,14 @@ export default function RoomBookingsPage() {
     });
 
     const [deleteBooking] = useDeleteBookingMutation();
-    const [joinBooking, { isLoading: isJoining }] = useJoinBookingMutation();
-    const [leaveBooking, { isLoading: isLeaving }] = useLeaveBookingMutation();
-    const isToggling = isJoining || isLeaving;
+    const [joinBooking] = useJoinBookingMutation();
+    const [leaveBooking] = useLeaveBookingMutation();
+
+    const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
     const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
     const isRoomAdmin = getRoomRole(room, currentUser).isAdmin;
@@ -66,21 +69,19 @@ export default function RoomBookingsPage() {
         setIsBookingModalOpen(true);
     };
 
-    const handleDeleteBooking = async (booking: Booking) => {
-        if (
-            !window.confirm(`Are you sure you want to cancel "${booking.title}"?`)
-        ) {
-            return;
-        }
+    const confirmDeleteBooking = async () => {
+        if (!bookingToDelete) return;
         try {
-            await deleteBooking({ id: booking.id, roomId }).unwrap();
+            await deleteBooking({ id: bookingToDelete.id, roomId }).unwrap();
             toast.success('Booking cancelled');
+            setBookingToDelete(null);
         } catch (err: unknown) {
             toast.error(getApiErrorMessage(err, 'Failed to cancel booking'));
         }
     };
 
     const handleToggleParticipation = async (booking: Booking, isParticipating: boolean) => {
+        setPendingBookingId(booking.id);
         try {
             if (isParticipating) {
                 const res = await leaveBooking({ id: booking.id, roomId }).unwrap();
@@ -91,6 +92,8 @@ export default function RoomBookingsPage() {
             }
         } catch (err: unknown) {
             toast.error(getApiErrorMessage(err, 'Failed to update participation'));
+        } finally {
+            setPendingBookingId(null);
         }
     };
 
@@ -170,9 +173,9 @@ export default function RoomBookingsPage() {
                     currentUser={currentUser}
                     isRoomAdmin={isRoomAdmin}
                     onEdit={handleOpenEdit}
-                    onDelete={handleDeleteBooking}
+                    onDelete={(b) => setBookingToDelete(b)}
                     onToggleParticipation={handleToggleParticipation}
-                    isToggling={isToggling}
+                    pendingBookingId={pendingBookingId}
                     onBookRoom={handleOpenCreate}
                 />
             )}
@@ -188,6 +191,16 @@ export default function RoomBookingsPage() {
                 isOpen={isMembersModalOpen}
                 onClose={() => setIsMembersModalOpen(false)}
                 room={room}
+            />
+
+            <ConfirmModal
+                isOpen={!!bookingToDelete}
+                onClose={() => setBookingToDelete(null)}
+                onConfirm={confirmDeleteBooking}
+                title="Cancel Booking"
+                description={`Are you sure you want to cancel "${bookingToDelete?.title}"? This action cannot be undone.`}
+                confirmText="Cancel Booking"
+                isDestructive
             />
         </main>
     );

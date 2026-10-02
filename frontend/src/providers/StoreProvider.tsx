@@ -1,14 +1,14 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useRef } from 'react';
 import { Provider } from 'react-redux';
-import { store } from '@/store/store';
-import { initAuth } from '@/store/slices/authSlice';
+import { makeStore, AppStore } from '@/store/store';
 
 export default function StoreProvider({ children }: { children: ReactNode }) {
-    useEffect(() => {
-        store.dispatch(initAuth());
-    }, []);
+    const storeRef = useRef<AppStore | undefined>(undefined);
+    if (!storeRef.current) {
+        storeRef.current = makeStore();
+    }
 
-    return <Provider store={store}>{children}</Provider>;
+    return <Provider store={storeRef.current}>{children}</Provider>;
 }

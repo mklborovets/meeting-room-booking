@@ -20,6 +20,8 @@ import { useAppSelector } from '@/store/hooks';
 import { Room } from '@/types';
 import RoomModal from '@/components/rooms/RoomModal';
 import RoomMembersModal from '@/components/rooms/RoomMembersModal';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { getRoomRole } from '@/lib/roles';
 import { getApiErrorMessage } from '@/lib/error';
 
@@ -31,6 +33,7 @@ export default function HomePage() {
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [membersRoom, setMembersRoom] = useState<Room | null>(null);
+    const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
 
     const checkIsRoomAdmin = (room: Room) => {
         return getRoomRole(room, currentUser).isAdmin;
@@ -46,13 +49,12 @@ export default function HomePage() {
         setIsRoomModalOpen(true);
     };
 
-    const handleDelete = async (room: Room) => {
-        if (!window.confirm(`Are you sure you want to delete "${room.name}"?`)) {
-            return;
-        }
+    const confirmDelete = async () => {
+        if (!roomToDelete) return;
         try {
-            await deleteRoom(room.id).unwrap();
+            await deleteRoom(roomToDelete.id).unwrap();
             toast.success('Room deleted successfully');
+            setRoomToDelete(null);
         } catch (err: unknown) {
             toast.error(getApiErrorMessage(err, 'Failed to delete room'));
         }
@@ -96,25 +98,20 @@ export default function HomePage() {
             )}
 
             {!isLoading && !isError && rooms?.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                        <DoorOpen className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                        No meeting rooms yet
-                    </h3>
-                    <p className="mt-1 max-w-sm text-sm text-gray-500">
-                        Get started by creating your first meeting room and inviting team
-                        members.
-                    </p>
-                    <button
-                        onClick={handleOpenCreate}
-                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                    >
-                        <Plus className="h-4 w-4" />
-                        <span>Create Room</span>
-                    </button>
-                </div>
+                <EmptyState
+                    title="No meeting rooms yet"
+                    description="Get started by creating your first meeting room and inviting team members."
+                    icon={<DoorOpen className="h-6 w-6" />}
+                    action={
+                        <button
+                            onClick={handleOpenCreate}
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                            <span>Create Room</span>
+                        </button>
+                    }
+                />
             )}
 
             {!isLoading && !isError && rooms && rooms.length > 0 && (
@@ -174,7 +171,7 @@ export default function HomePage() {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => handleDelete(room)}
+                                                    onClick={() => setRoomToDelete(room)}
                                                     title="Delete Room"
                                                     className="inline-flex items-center justify-center rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
                                                 >
@@ -200,6 +197,16 @@ export default function HomePage() {
                 isOpen={!!membersRoom}
                 onClose={() => setMembersRoom(null)}
                 room={membersRoom}
+            />
+
+            <ConfirmModal
+                isOpen={!!roomToDelete}
+                onClose={() => setRoomToDelete(null)}
+                onConfirm={confirmDelete}
+                title="Delete Meeting Room"
+                description={`Are you sure you want to delete "${roomToDelete?.name}"? All associated bookings will be permanently deleted. This action cannot be undone.`}
+                confirmText="Delete"
+                isDestructive
             />
         </main>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,6 +54,9 @@ export default function BookingModal({
             endTime: new Date(),
         },
     });
+
+    const startTimeValue = useWatch({ control, name: 'startTime' });
+    const endTimeValue = useWatch({ control, name: 'endTime' });
 
     useEffect(() => {
         if (booking) {
@@ -154,8 +157,8 @@ export default function BookingModal({
                                     dateFormat="MMMM d, yyyy HH:mm"
                                     minDate={!isEditing ? new Date() : undefined}
                                     selectsStart
-                                    startDate={control._formValues.startTime}
-                                    endDate={control._formValues.endTime}
+                                    startDate={startTimeValue}
+                                    endDate={endTimeValue}
                                     placeholderText="Select start time"
                                     wrapperClassName="w-full"
                                     className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm focus:border-blue-600 focus:outline-none"
@@ -186,10 +189,10 @@ export default function BookingModal({
                                     timeIntervals={15}
                                     timeCaption="Time"
                                     dateFormat="MMMM d, yyyy HH:mm"
-                                    minDate={control._formValues.startTime || (!isEditing ? new Date() : undefined)}
+                                    minDate={startTimeValue || (!isEditing ? new Date() : undefined)}
                                     selectsEnd
-                                    startDate={control._formValues.startTime}
-                                    endDate={control._formValues.endTime}
+                                    startDate={startTimeValue}
+                                    endDate={endTimeValue}
                                     placeholderText="Select end time"
                                     wrapperClassName="w-full"
                                     className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm focus:border-blue-600 focus:outline-none"

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export interface ModalProps {
@@ -26,6 +26,9 @@ export const Modal = ({
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
             document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                modalRef.current?.focus();
+            }, 0);
         }
 
         return () => {
@@ -33,6 +36,9 @@ export const Modal = ({
             document.body.style.overflow = 'unset';
         };
     }, [isOpen, onClose]);
+
+    const titleId = useId();
+    const modalRef = useRef<HTMLDivElement>(null);
 
     if (!isOpen) return null;
 
@@ -49,15 +55,17 @@ export const Modal = ({
             onClick={onClose}
         >
             <div
-                className={`w-full ${maxWidthClass} rounded-xl bg-white p-6 shadow-lg`}
+                ref={modalRef}
+                tabIndex={-1}
+                className={`w-full ${maxWidthClass} rounded-xl bg-white p-6 shadow-lg outline-none`}
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="modal-title"
+                aria-labelledby={titleId}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h2 id="modal-title" className="text-lg font-bold text-gray-900">
+                        <h2 id={titleId} className="text-lg font-bold text-gray-900">
                             {title}
                         </h2>
                         {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}

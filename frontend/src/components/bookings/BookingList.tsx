@@ -1,5 +1,6 @@
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { BookingCard } from './BookingCard';
 import { Booking, User } from '@/types';
 
@@ -12,7 +13,7 @@ interface BookingListProps {
     onEdit: (booking: Booking) => void;
     onDelete: (booking: Booking) => void;
     onToggleParticipation: (booking: Booking, isParticipating: boolean) => void;
-    isToggling: boolean;
+    pendingBookingId: string | null;
     onBookRoom?: () => void;
     showEmptyStateBookButton?: boolean;
 }
@@ -26,7 +27,7 @@ export function BookingList({
     onEdit,
     onDelete,
     onToggleParticipation,
-    isToggling,
+    pendingBookingId,
     onBookRoom,
     showEmptyStateBookButton,
 }: BookingListProps) {
@@ -43,22 +44,18 @@ export function BookingList({
             </div>
 
             {bookings.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                        <Calendar className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                        No {title.toLowerCase()}
-                    </h3>
-                    <p className="mt-1 max-w-sm text-sm text-gray-500">
-                        There are no bookings in this category.
-                    </p>
-                    {showEmptyStateBookButton && isRoomAdmin && onBookRoom && (
-                        <Button onClick={onBookRoom} className="mt-4">
-                            Book Room
-                        </Button>
-                    )}
-                </div>
+                <EmptyState
+                    title={`No ${title.toLowerCase()}`}
+                    description="There are no bookings in this category."
+                    icon={<Calendar className="h-6 w-6" />}
+                    action={
+                        showEmptyStateBookButton && isRoomAdmin && onBookRoom ? (
+                            <Button onClick={onBookRoom}>
+                                Book Room
+                            </Button>
+                        ) : undefined
+                    }
+                />
             ) : (
                 <div className="space-y-4">
                     {bookings.map((booking) => (
@@ -70,7 +67,7 @@ export function BookingList({
                             onEdit={onEdit}
                             onDelete={onDelete}
                             onToggleParticipation={onToggleParticipation}
-                            isToggling={isToggling}
+                            pendingBookingId={pendingBookingId}
                         />
                     ))}
                 </div>

@@ -1,7 +1,6 @@
 export type Role = 'ADMIN' | 'USER';
 
 export interface User {
-    userId: string | undefined;
     id: string;
     name: string;
     email: string;
@@ -29,12 +28,6 @@ export interface Room {
     members: RoomMember[];
 }
 
-export interface BookingParticipant {
-    id: string;
-    bookingId: string;
-    userId: string;
-    user: User;
-}
 
 export interface Booking {
     id: string;

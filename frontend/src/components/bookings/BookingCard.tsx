@@ -11,7 +11,7 @@ interface BookingCardProps {
     onEdit: (booking: Booking) => void;
     onDelete: (booking: Booking) => void;
     onToggleParticipation: (booking: Booking, isParticipating: boolean) => void;
-    isToggling: boolean;
+    pendingBookingId: string | null;
 }
 
 export function BookingCard({
@@ -21,14 +21,15 @@ export function BookingCard({
     onEdit,
     onDelete,
     onToggleParticipation,
-    isToggling,
+    pendingBookingId,
 }: BookingCardProps) {
     const startDate = new Date(booking.startTime);
     const endDate = new Date(booking.endTime);
     const participants = booking.participants || [];
 
     const isParticipating = participants.some((p) => p.id === currentUser?.id);
-    const canEdit = Boolean(currentUser && isRoomAdmin);
+    const isPast = endDate.getTime() < Date.now();
+    const canEdit = Boolean(currentUser && isRoomAdmin && !isPast);
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
@@ -89,38 +90,40 @@ export function BookingCard({
                     )}
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-start">
-                    <Button
-                        variant={isParticipating ? "outline" : "primary"}
-                        onClick={() => onToggleParticipation(booking, isParticipating)}
-                        isLoading={isToggling}
-                        icon={!isParticipating ? <UserPlus /> : undefined}
-                    >
-                        {isParticipating ? 'Leave' : 'Join'}
-                    </Button>
+                {!isPast && (
+                    <div className="flex items-center gap-2 self-end sm:self-start">
+                        <Button
+                            variant={isParticipating ? "outline" : "primary"}
+                            onClick={() => onToggleParticipation(booking, isParticipating)}
+                            isLoading={pendingBookingId === booking.id}
+                            icon={!isParticipating ? <UserPlus /> : undefined}
+                        >
+                            {isParticipating ? 'Leave' : 'Join'}
+                        </Button>
 
-                    {canEdit && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                onClick={() => onEdit(booking)}
-                                className="!p-2 text-gray-600 hover:bg-gray-50 hover:text-blue-600"
-                                aria-label="Edit Booking"
-                            >
-                                <Edit2 className="h-4 w-4" />
-                            </Button>
+                        {canEdit && (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => onEdit(booking)}
+                                    className="!p-2 text-gray-600 hover:bg-gray-50 hover:text-blue-600"
+                                    aria-label="Edit Booking"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </Button>
 
-                            <Button
-                                variant="ghost"
-                                onClick={() => onDelete(booking)}
-                                className="!p-2 text-gray-600 hover:bg-red-50 hover:text-red-600"
-                                aria-label="Cancel Booking"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </>
-                    )}
-                </div>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => onDelete(booking)}
+                                    className="!p-2 text-gray-600 hover:bg-red-50 hover:text-red-600"
+                                    aria-label="Cancel Booking"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

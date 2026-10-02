@@ -13,7 +13,7 @@ interface BookingScheduleProps {
     onEdit: (booking: Booking) => void;
     onDelete: (booking: Booking) => void;
     onToggleParticipation: (booking: Booking, isParticipating: boolean) => void;
-    isToggling: boolean;
+    pendingBookingId: string | null;
     onBookRoom?: () => void;
 }
 
@@ -24,7 +24,7 @@ export function BookingSchedule({
     onEdit,
     onDelete,
     onToggleParticipation,
-    isToggling,
+    pendingBookingId,
     onBookRoom,
 }: BookingScheduleProps) {
     const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
@@ -69,7 +69,7 @@ export function BookingSchedule({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleParticipation={onToggleParticipation}
-                isToggling={isToggling}
+                pendingBookingId={pendingBookingId}
                 onBookRoom={onBookRoom}
                 showEmptyStateBookButton={isSameDay(selectedDate, new Date()) || selectedDate > new Date()}
             />
