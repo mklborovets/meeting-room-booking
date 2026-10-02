@@ -13,7 +13,7 @@ export const roomsApi = baseApi.injectEndpoints({
                     ]
                     : [{ type: 'Room', id: 'LIST' }],
         }),
-        getRoomById: builder.query<Room, number>({
+        getRoomById: builder.query<Room, string>({
             query: (id) => `/rooms/${id}`,
             providesTags: (result, error, id) => [{ type: 'Room', id }],
         }),
@@ -27,7 +27,7 @@ export const roomsApi = baseApi.injectEndpoints({
         }),
         updateRoom: builder.mutation<
             Room,
-            { id: number; name: string; description?: string }
+            { id: string; name: string; description?: string }
         >({
             query: ({ id, ...body }) => ({
                 url: `/rooms/${id}`,
@@ -39,7 +39,7 @@ export const roomsApi = baseApi.injectEndpoints({
                 { type: 'Room', id: 'LIST' },
             ],
         }),
-        deleteRoom: builder.mutation<{ message: string }, number>({
+        deleteRoom: builder.mutation<{ message: string }, string>({
             query: (id) => ({
                 url: `/rooms/${id}`,
                 method: 'DELETE',
@@ -48,7 +48,7 @@ export const roomsApi = baseApi.injectEndpoints({
         }),
         addRoomMember: builder.mutation<
             void,
-            { roomId: number; email: string; role: Role }
+            { roomId: string; email: string; role: Role }
         >({
             query: ({ roomId, ...body }) => ({
                 url: `/rooms/${roomId}/members`,
@@ -62,7 +62,7 @@ export const roomsApi = baseApi.injectEndpoints({
         }),
         removeRoomMember: builder.mutation<
             void,
-            { roomId: number; userId: number }
+            { roomId: string; userId: string }
         >({
             query: ({ roomId, userId }) => ({
                 url: `/rooms/${roomId}/members/${userId}`,

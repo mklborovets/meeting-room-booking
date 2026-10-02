@@ -10,6 +10,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { setCredentials } from '@/store/slices/authSlice';
 import toast from 'react-hot-toast';
 import { LogIn } from 'lucide-react';
+import { baseApi } from '@/store/api/baseApi';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -27,11 +28,13 @@ export default function LoginPage() {
     const onSubmit = async (data: LoginFormValues) => {
         try {
             const response = await login(data).unwrap();
+            dispatch(baseApi.util.resetApiState());
             dispatch(setCredentials(response));
             toast.success('Signed in successfully');
             router.push('/');
         } catch (err: any) {
-            const message = err?.data?.message || 'Failed to sign in. Please check your credentials.';
+            const message =
+                err?.data?.message || 'Failed to sign in. Please check your credentials.';
             toast.error(message);
         }
     };

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { useGetMeQuery } from '@/store/api/authApi';
 import { setUser, logout } from '@/store/slices/authSlice';
+import { User } from '@/types';
 
 const PUBLIC_PATHS = ['/login', '/register'];
 
@@ -19,12 +20,16 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
 
     const { data: userData, isError, isLoading } = useGetMeQuery(undefined, {
-        skip: !isInitialized || !token || !!user,
+        skip: !isInitialized || !token || !!user?.id,
     });
 
     useEffect(() => {
         if (userData) {
-            dispatch(setUser(userData));
+            const actualUser: User =
+                (userData as unknown as { user?: User }).user || userData;
+            if (actualUser?.id) {
+                dispatch(setUser(actualUser));
+            }
         }
     }, [userData, dispatch]);
 
@@ -47,7 +52,7 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
         }
     }, [isInitialized, isAuthenticated, token, isPublicPath, router]);
 
-    if (!isInitialized || (token && !user && isLoading)) {
+    if (!isInitialized || (token && !user?.id && isLoading)) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />

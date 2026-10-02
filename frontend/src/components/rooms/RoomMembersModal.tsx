@@ -26,7 +26,7 @@ export default function RoomMembersModal({
 }: RoomMembersModalProps) {
     const currentUser = useAppSelector((state) => state.auth.user);
 
-    const { data: roomDetails } = useGetRoomByIdQuery(room?.id ?? 0, {
+    const { data: roomDetails } = useGetRoomByIdQuery(room?.id ?? '', {
         skip: !isOpen || !room,
     });
 
@@ -51,13 +51,19 @@ export default function RoomMembersModal({
 
     if (!isOpen || !activeRoom) return null;
 
-    const members = activeRoom.members || [];
+    const members = [...(activeRoom.members || [])].sort((a, b) => {
+        if (a.userId === activeRoom.createdBy) return -1;
+        if (b.userId === activeRoom.createdBy) return 1;
+        if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1;
+        if (a.role !== 'ADMIN' && b.role === 'ADMIN') return 1;
+        return (a.user?.name || '').localeCompare(b.user?.name || '');
+    });
+
     const currentMemberRecord = members.find(
         (m) => m.userId === currentUser?.id
     );
-    const isAdmin =
-        activeRoom.createdBy === currentUser?.id ||
-        currentMemberRecord?.role === 'ADMIN';
+    const isCreator = activeRoom.createdBy === currentUser?.id;
+    const isAdmin = isCreator || currentMemberRecord?.role === 'ADMIN';
 
     const onSubmit = async (data: AddMemberFormValues) => {
         try {
@@ -74,7 +80,7 @@ export default function RoomMembersModal({
         }
     };
 
-    const handleRemoveMember = async (userId: number) => {
+    const handleRemoveMember = async (userId: string) => {
         try {
             await removeMember({ roomId: activeRoom.id, userId }).unwrap();
             toast.success('Member removed');
@@ -177,14 +183,14 @@ export default function RoomMembersModal({
                                 <div className="flex items-center gap-2">
                                     <span
                                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${member.role === 'ADMIN'
-                                                ? 'bg-blue-50 text-blue-700'
-                                                : 'bg-gray-100 text-gray-700'
+                                            ? 'bg-blue-50 text-blue-700'
+                                            : 'bg-gray-100 text-gray-700'
                                             }`}
                                     >
-                                        {member.role}
+                                        {member.role === 'ADMIN' && member.userId === activeRoom.createdBy ? 'CREATOR' : member.role}
                                     </span>
 
-                                    {isAdmin && member.userId !== currentUser?.id && (
+                                    {(isCreator || (isAdmin && member.role !== 'ADMIN')) && member.userId !== currentUser?.id && member.userId !== activeRoom.createdBy && (
                                         <button
                                             onClick={() => handleRemoveMember(member.userId)}
                                             disabled={isRemoving}

@@ -1,7 +1,7 @@
 export type Role = 'ADMIN' | 'USER';
 
 export interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
 }
@@ -12,38 +12,38 @@ export interface AuthResponse {
 }
 
 export interface RoomMember {
-    id: number;
-    roomId: number;
-    userId: number;
+    id: string;
+    roomId: string;
+    userId: string;
     role: Role;
     user?: User;
 }
 
 export interface Room {
-    id: number;
+    id: string;
     name: string;
     description: string;
-    createdBy: number;
+    createdBy: string;
     createdAt?: string;
     updatedAt?: string;
     members?: RoomMember[];
 }
 
 export interface BookingParticipant {
-    id: number;
-    bookingId: number;
-    userId: number;
+    id: string;
+    bookingId: string;
+    userId: string;
     user?: User;
 }
 
 export interface Booking {
-    id: number;
-    roomId: number;
-    createdBy: number;
+    id: string;
+    roomId: string;
+    createdBy: string;
     title: string;
     description: string;
     startTime: string;
     endTime: string;
     creator?: User;
-    participants?: BookingParticipant[];
+    participants?: User[];
 }

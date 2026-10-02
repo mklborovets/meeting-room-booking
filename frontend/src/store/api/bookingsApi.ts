@@ -3,7 +3,7 @@ import { Booking } from '@/types';
 
 export const bookingsApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        getBookingsByRoom: builder.query<Booking[], number>({
+        getBookingsByRoom: builder.query<Booking[], string>({
             query: (roomId) => `/bookings/room/${roomId}`,
             providesTags: (result, error, roomId) => [
                 { type: 'Booking', id: `ROOM_${roomId}` },
@@ -12,7 +12,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         createBooking: builder.mutation<
             Booking,
             {
-                roomId: number;
+                roomId: string;
                 title: string;
                 description?: string;
                 startTime: string;
@@ -31,8 +31,8 @@ export const bookingsApi = baseApi.injectEndpoints({
         updateBooking: builder.mutation<
             Booking,
             {
-                id: number;
-                roomId: number;
+                id: string;
+                roomId: string;
                 title?: string;
                 description?: string;
                 startTime?: string;
@@ -50,7 +50,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         }),
         deleteBooking: builder.mutation<
             { message: string },
-            { id: number; roomId: number }
+            { id: string; roomId: string }
         >({
             query: ({ id }) => ({
                 url: `/bookings/${id}`,
@@ -62,7 +62,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         }),
         toggleParticipation: builder.mutation<
             { message: string; joined?: boolean },
-            { id: number; roomId: number }
+            { id: string; roomId: string }
         >({
             query: ({ id }) => ({
                 url: `/bookings/${id}/participate`,
