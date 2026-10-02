@@ -4,7 +4,7 @@ import { Booking } from '@/types';
 export const bookingsApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getBookingsByRoom: builder.query<Booking[], string>({
-            query: (roomId) => `/bookings/room/${roomId}`,
+            query: (roomId) => `/rooms/${roomId}/bookings`,
             providesTags: (result, error, roomId) => [
                 { type: 'Booking', id: `ROOM_${roomId}` },
             ],
@@ -60,13 +60,25 @@ export const bookingsApi = baseApi.injectEndpoints({
                 { type: 'Booking', id: `ROOM_${roomId}` },
             ],
         }),
-        toggleParticipation: builder.mutation<
-            { message: string; joined?: boolean },
+        joinBooking: builder.mutation<
+            { message: string },
             { id: string; roomId: string }
         >({
             query: ({ id }) => ({
-                url: `/bookings/${id}/participate`,
+                url: `/bookings/${id}/participants`,
                 method: 'POST',
+            }),
+            invalidatesTags: (result, error, { roomId }) => [
+                { type: 'Booking', id: `ROOM_${roomId}` },
+            ],
+        }),
+        leaveBooking: builder.mutation<
+            { message: string },
+            { id: string; roomId: string }
+        >({
+            query: ({ id }) => ({
+                url: `/bookings/${id}/participants/me`,
+                method: 'DELETE',
             }),
             invalidatesTags: (result, error, { roomId }) => [
                 { type: 'Booking', id: `ROOM_${roomId}` },
@@ -80,5 +92,6 @@ export const {
     useCreateBookingMutation,
     useUpdateBookingMutation,
     useDeleteBookingMutation,
-    useToggleParticipationMutation,
+    useJoinBookingMutation,
+    useLeaveBookingMutation,
 } = bookingsApi;

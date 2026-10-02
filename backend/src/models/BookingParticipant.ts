@@ -12,6 +12,12 @@ import { User } from './User';
 @Table({
     tableName: 'booking_participants',
     timestamps: true,
+    indexes: [
+        {
+            unique: true,
+            fields: ['bookingId', 'userId'],
+        },
+    ],
 })
 export class BookingParticipant extends Model {
     @Column({
@@ -19,7 +25,7 @@ export class BookingParticipant extends Model {
         defaultValue: DataType.UUIDV4,
         primaryKey: true,
     })
-    id!: string;
+    declare id: string;
 
     @ForeignKey(() => Booking)
     @Column({

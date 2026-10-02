@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { AuthController } from '../controllers/auth.controller';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticate } from '../middlewares/auth.middleware';
@@ -6,8 +7,15 @@ import { registerSchema, loginSchema } from '../schemas/auth.schema';
 
 const router = Router();
 
-router.post('/register', validate(registerSchema), AuthController.register);
-router.post('/login', validate(loginSchema), AuthController.login);
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { message: 'Too many requests from this IP, please try again after 15 minutes' },
+});
+
+router.post('/register', authLimiter, validate(registerSchema), AuthController.register);
+router.post('/login', authLimiter, validate(loginSchema), AuthController.login);
+router.post('/logout', authenticate, AuthController.logout);
 router.get('/me', authenticate, AuthController.getMe);
 
 export default router;

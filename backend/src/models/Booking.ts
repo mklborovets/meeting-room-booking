@@ -15,6 +15,11 @@ import { BookingParticipant } from './BookingParticipant';
 @Table({
     tableName: 'bookings',
     timestamps: true,
+    indexes: [
+        {
+            fields: ['roomId', 'startTime'],
+        },
+    ],
 })
 export class Booking extends Model {
     @Column({
@@ -22,7 +27,7 @@ export class Booking extends Model {
         defaultValue: DataType.UUIDV4,
         primaryKey: true,
     })
-    id!: string;
+    declare id: string;
 
     @ForeignKey(() => Room)
     @Column({

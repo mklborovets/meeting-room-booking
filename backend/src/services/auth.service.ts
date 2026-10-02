@@ -1,23 +1,19 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../models';
-import { ApiError } from '../middlewares/error.middleware';
+import { ApiError } from '../errors/ApiError';
 import { RegisterInput, LoginInput } from '../schemas/auth.schema';
+import { env } from '../config/env';
 
 export class AuthService {
     private static generateToken(user: User): string {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            throw new Error('JWT_SECRET is not defined');
-        }
-
         const options: SignOptions = {
-            expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'],
+            expiresIn: '7d',
         };
 
         return jwt.sign(
             { id: user.id, email: user.email, name: user.name },
-            secret,
+            env.JWT_SECRET,
             options
         );
     }

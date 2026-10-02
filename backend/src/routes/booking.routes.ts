@@ -11,10 +11,10 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/room/:roomId', BookingController.getByRoom);
 router.post('/', validate(createBookingSchema), BookingController.create);
 router.put('/:id', validate(updateBookingSchema), BookingController.update);
 router.delete('/:id', BookingController.delete);
-router.post('/:id/participate', BookingController.toggleParticipation);
+router.post('/:id/participants', BookingController.joinBooking);
+router.delete('/:id/participants/me', BookingController.leaveBooking);
 
 export default router;

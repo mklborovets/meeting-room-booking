@@ -2,17 +2,16 @@ import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { connectDB } from './config/database';
 import { errorHandler } from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
 import bookingRoutes from './routes/booking.routes';
-
-dotenv.config();
+import { env } from './config/env';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 app.use(helmet());
 app.use(
@@ -22,6 +21,7 @@ app.use(
     })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

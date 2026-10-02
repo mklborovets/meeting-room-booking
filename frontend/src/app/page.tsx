@@ -20,6 +20,8 @@ import { useAppSelector } from '@/store/hooks';
 import { Room } from '@/types';
 import RoomModal from '@/components/rooms/RoomModal';
 import RoomMembersModal from '@/components/rooms/RoomMembersModal';
+import { getRoomRole } from '@/lib/roles';
+import { getApiErrorMessage } from '@/lib/error';
 
 export default function HomePage() {
     const currentUser = useAppSelector((state) => state.auth.user);
@@ -31,12 +33,7 @@ export default function HomePage() {
     const [membersRoom, setMembersRoom] = useState<Room | null>(null);
 
     const checkIsRoomAdmin = (room: Room) => {
-        if (!currentUser) return false;
-        if (room.createdBy === currentUser.id) return true;
-        const memberRecord = room.members?.find(
-            (m) => m.userId === currentUser.id
-        );
-        return memberRecord?.role === 'ADMIN';
+        return getRoomRole(room, currentUser).isAdmin;
     };
 
     const handleOpenCreate = () => {
@@ -57,8 +54,7 @@ export default function HomePage() {
             await deleteRoom(room.id).unwrap();
             toast.success('Room deleted successfully');
         } catch (err: unknown) {
-            const apiError = err as { data?: { message?: string } };
-            toast.error(apiError?.data?.message || 'Failed to delete room');
+            toast.error(getApiErrorMessage(err, 'Failed to delete room'));
         }
     };
 

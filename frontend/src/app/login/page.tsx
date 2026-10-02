@@ -11,6 +11,7 @@ import { setCredentials } from '@/store/slices/authSlice';
 import toast from 'react-hot-toast';
 import { LogIn } from 'lucide-react';
 import { baseApi } from '@/store/api/baseApi';
+import { getApiErrorMessage } from '@/lib/error';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -32,10 +33,8 @@ export default function LoginPage() {
             dispatch(setCredentials(response));
             toast.success('Signed in successfully');
             router.push('/');
-        } catch (err: any) {
-            const message =
-                err?.data?.message || 'Failed to sign in. Please check your credentials.';
-            toast.error(message);
+        } catch (err: unknown) {
+            toast.error(getApiErrorMessage(err, 'Failed to sign in. Please check your credentials.'));
         }
     };
 

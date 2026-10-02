@@ -16,7 +16,19 @@ router.use(authenticate);
 
 router.get('/', RoomController.getAll);
 router.post('/', validate(createRoomSchema), RoomController.create);
-router.get('/:id', RoomController.getById);
+router.get(
+    '/:id',
+    requireRoomRole([RoomRole.ADMIN, RoomRole.USER]),
+    RoomController.getById
+);
+
+import { BookingController } from '../controllers/booking.controller';
+
+router.get(
+    '/:roomId/bookings',
+    requireRoomRole([RoomRole.ADMIN, RoomRole.USER]),
+    BookingController.getByRoom
+);
 
 router.put(
     '/:id',

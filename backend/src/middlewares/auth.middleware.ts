@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { ApiError } from './error.middleware';
+import { ApiError } from '../errors/ApiError';
+import { env } from '../config/env';
 
 interface JwtPayload {
     id: string;
@@ -14,20 +15,13 @@ export const authenticate = (
     next: NextFunction
 ) => {
     try {
-        const authHeader = req.headers.authorization;
+        const token = req.cookies.token;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!token) {
             throw new ApiError(401, 'Authentication required');
         }
 
-        const token = authHeader.split(' ')[1];
-        const secret = process.env.JWT_SECRET;
-
-        if (!secret) {
-            throw new Error('JWT_SECRET is not configured');
-        }
-
-        const decoded = jwt.verify(token, secret) as JwtPayload;
+        const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
         req.user = {
             id: decoded.id,
             email: decoded.email,

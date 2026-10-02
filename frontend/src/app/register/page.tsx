@@ -8,8 +8,10 @@ import { registerSchema, RegisterFormValues } from '@/lib/validations/auth';
 import { useRegisterMutation } from '@/store/api/authApi';
 import { useAppDispatch } from '@/store/hooks';
 import { setCredentials } from '@/store/slices/authSlice';
+import { baseApi } from '@/store/api/baseApi';
 import toast from 'react-hot-toast';
 import { UserPlus } from 'lucide-react';
+import { getApiErrorMessage } from '@/lib/error';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -28,15 +30,12 @@ export default function RegisterPage() {
         try {
             const { confirmPassword, ...registerPayload } = data;
             const response = await registerUser(registerPayload).unwrap();
+            dispatch(baseApi.util.resetApiState());
             dispatch(setCredentials(response));
             toast.success('Account created successfully');
             router.push('/');
         } catch (err: unknown) {
-            const apiError = err as { data?: { message?: string } };
-            const message =
-                apiError?.data?.message ||
-                'Registration failed. Please try a different email.';
-            toast.error(message);
+            toast.error(getApiErrorMessage(err, 'Registration failed. Please try a different email.'));
         }
     };
 

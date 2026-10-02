@@ -1,6 +1,6 @@
 import { sequelize } from '../config/database';
 import { Room, RoomMember, RoomRole, User, Booking } from '../models';
-import { ApiError } from '../middlewares/error.middleware';
+import { ApiError } from '../errors/ApiError';
 import {
     CreateRoomInput,
     UpdateRoomInput,
@@ -38,8 +38,16 @@ export class RoomService {
         }
     }
 
-    static async getAllRooms() {
+    static async getAllRooms(userId: string) {
+        const memberships = await RoomMember.findAll({ where: { userId } });
+        const roomIds = memberships.map(m => m.roomId);
+
+        if (roomIds.length === 0) {
+            return [];
+        }
+
         return Room.findAll({
+            where: { id: roomIds },
             include: [
                 {
                     model: User,
@@ -79,23 +87,6 @@ export class RoomService {
                         },
                     ],
                 },
-                {
-                    model: Booking,
-                    as: 'bookings',
-                    include: [
-                        {
-                            model: User,
-                            as: 'creator',
-                            attributes: ['id', 'name', 'email'],
-                        },
-                        {
-                            model: User,
-                            as: 'participants',
-                            attributes: ['id', 'name', 'email'],
-                            through: { attributes: [] },
-                        },
-                    ],
-                },
             ],
         });
 
@@ -125,7 +116,7 @@ export class RoomService {
         await room.destroy();
     }
 
-    static async addMemberByEmail(roomId: string, data: AddRoomMemberInput) {
+    static async addMemberByEmail(roomId: string, requesterUserId: string, data: AddRoomMemberInput) {
         const user = await User.findOne({ where: { email: data.email } });
         if (!user) {
             throw new ApiError(404, 'User with this email does not exist');
@@ -136,6 +127,13 @@ export class RoomService {
         });
 
         if (existingMembership) {
+            const room = await Room.findByPk(roomId);
+            if (user.id === room?.createdBy && data.role !== RoomRole.ADMIN) {
+                throw new ApiError(403, 'The creator of the room must remain an ADMIN');
+            }
+            if (existingMembership.role === RoomRole.ADMIN && data.role !== RoomRole.ADMIN && requesterUserId !== room?.createdBy) {
+                throw new ApiError(403, 'Only the room creator can downgrade other administrators');
+            }
             existingMembership.role = data.role;
             await existingMembership.save();
         } else {
@@ -149,15 +147,28 @@ export class RoomService {
         return this.getRoomById(roomId);
     }
 
-    static async removeMember(roomId: string, targetUserId: string) {
-        const membership = await RoomMember.findOne({
+    static async removeMember(roomId: string, targetUserId: string, requesterUserId: string) {
+        const room = await Room.findByPk(roomId);
+        if (!room) {
+            throw new ApiError(404, 'Meeting room not found');
+        }
+
+        if (targetUserId === room.createdBy) {
+            throw new ApiError(403, 'The creator of the room cannot be removed');
+        }
+
+        const targetMembership = await RoomMember.findOne({
             where: { roomId, userId: targetUserId },
         });
 
-        if (!membership) {
+        if (!targetMembership) {
             throw new ApiError(404, 'Member not found in this room');
         }
 
-        await membership.destroy();
+        if (requesterUserId !== room.createdBy && targetMembership.role === RoomRole.ADMIN) {
+            throw new ApiError(403, 'Only the room creator can remove other administrators');
+        }
+
+        await targetMembership.destroy();
     }
 }

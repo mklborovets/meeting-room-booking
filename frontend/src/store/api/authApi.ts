@@ -1,9 +1,10 @@
 import { baseApi } from './baseApi';
 import { AuthResponse, User } from '@/types';
+import { LoginFormValues, RegisterFormValues } from '@/lib/validations/auth';
 
 export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        register: builder.mutation<AuthResponse, Record<string, string>>({
+        register: builder.mutation<AuthResponse, RegisterFormValues>({
             query: (body) => ({
                 url: '/auth/register',
                 method: 'POST',
@@ -11,7 +12,7 @@ export const authApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['User'],
         }),
-        login: builder.mutation<AuthResponse, Record<string, string>>({
+        login: builder.mutation<AuthResponse, LoginFormValues>({
             query: (body) => ({
                 url: '/auth/login',
                 method: 'POST',
@@ -21,9 +22,17 @@ export const authApi = baseApi.injectEndpoints({
         }),
         getMe: builder.query<User, void>({
             query: () => '/auth/me',
+            transformResponse: (response: { user: User }) => response.user,
             providesTags: ['User'],
+        }),
+        logout: builder.mutation<void, void>({
+            query: () => ({
+                url: '/auth/logout',
+                method: 'POST',
+            }),
+            invalidatesTags: ['User', 'Room', 'Booking'],
         }),
     }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useGetMeQuery } = authApi;
+export const { useRegisterMutation, useLoginMutation, useLogoutMutation, useGetMeQuery } = authApi;

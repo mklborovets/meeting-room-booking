@@ -1,13 +1,13 @@
 export type Role = 'ADMIN' | 'USER';
 
 export interface User {
+    userId: string | undefined;
     id: string;
     name: string;
     email: string;
 }
 
 export interface AuthResponse {
-    token: string;
     user: User;
 }
 
@@ -16,7 +16,7 @@ export interface RoomMember {
     roomId: string;
     userId: string;
     role: Role;
-    user?: User;
+    user: User;
 }
 
 export interface Room {
@@ -26,14 +26,14 @@ export interface Room {
     createdBy: string;
     createdAt?: string;
     updatedAt?: string;
-    members?: RoomMember[];
+    members: RoomMember[];
 }
 
 export interface BookingParticipant {
     id: string;
     bookingId: string;
     userId: string;
-    user?: User;
+    user: User;
 }
 
 export interface Booking {
@@ -44,6 +44,6 @@ export interface Booking {
     description: string;
     startTime: string;
     endTime: string;
-    creator?: User;
-    participants?: User[];
+    creator: User;
+    participants: User[];
 }

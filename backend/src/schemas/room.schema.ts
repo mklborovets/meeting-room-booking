@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { RoomRole } from '../models';
 
 export const createRoomSchema = z.object({
-    name: z.string().min(2, 'Room name must be at least 2 characters'),
-    description: z.string().optional(),
+    name: z.string().min(2, 'Room name must be at least 2 characters').max(100, 'Room name is too long'),
+    description: z.string().max(1000, 'Description is too long').optional(),
 });
 
 export const updateRoomSchema = z.object({
-    name: z.string().min(2, 'Room name must be at least 2 characters').optional(),
-    description: z.string().optional(),
+    name: z.string().min(2, 'Room name must be at least 2 characters').max(100, 'Room name is too long').optional(),
+    description: z.string().max(1000, 'Description is too long').optional(),
 });
 
 export const addRoomMemberSchema = z.object({
-    email: z.string().email('Invalid email address'),
+    email: z.string().trim().toLowerCase().email('Invalid email address'),
     role: z.nativeEnum(RoomRole),
 });
 

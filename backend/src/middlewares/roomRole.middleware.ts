@@ -1,38 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
-import { RoomMember, RoomRole, Room } from '../models';
-import { ApiError } from './error.middleware';
+import { RoomMember, RoomRole } from '../models';
+import { ApiError } from '../errors/ApiError';
+
+export const checkRoomPermission = async (
+    roomId: string,
+    userId: string,
+    allowedRoles: RoomRole[]
+) => {
+    const membership = await RoomMember.findOne({
+        where: { roomId, userId },
+    });
+
+    if (!membership || !allowedRoles.includes(membership.role)) {
+        throw new ApiError(
+            403,
+            'You do not have permission to perform this action in this room'
+        );
+    }
+
+    return membership.role;
+};
 
 export const requireRoomRole = (allowedRoles: RoomRole[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user?.id;
+        const roomId = (req.params.roomId || req.params.id) as string;
+
+        if (!userId) {
+            return next(new ApiError(401, 'Authentication required'));
+        }
+
+        if (!roomId) {
+            return next(new ApiError(400, 'Room ID is required'));
+        }
+
         try {
-            const userId = req.user?.id;
-            const roomId = (req.params.roomId || req.params.id) as string;
-
-            if (!userId) {
-                throw new ApiError(401, 'Authentication required');
-            }
-
-            if (!roomId) {
-                throw new ApiError(400, 'Room ID is required');
-            }
-
-            const room = await Room.findByPk(roomId);
-            if (!room) {
-                throw new ApiError(404, 'Meeting room not found');
-            }
-
-            const membership = await RoomMember.findOne({
-                where: { roomId, userId },
-            });
-
-            if (!membership || !allowedRoles.includes(membership.role)) {
-                throw new ApiError(
-                    403,
-                    'You do not have permission to perform this action in this room'
-                );
-            }
-
-            req.roomRole = membership.role;
+            await checkRoomPermission(
+                roomId,
+                userId,
+                allowedRoles
+            );
             next();
         } catch (error) {
             next(error);

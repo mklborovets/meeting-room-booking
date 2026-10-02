@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
-import dotenv from 'dotenv';
+import { Umzug, SequelizeStorage } from 'umzug';
 import {
     User,
     Room,
@@ -7,32 +7,33 @@ import {
     Booking,
     BookingParticipant,
 } from '../models';
+import { env } from './env';
 
-dotenv.config();
-
-if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is not defined in .env file');
-}
-
-export const sequelize = new Sequelize(process.env.DATABASE_URL, {
+export const sequelize = new Sequelize(env.DATABASE_URL, {
     dialect: 'postgres',
     logging: false,
     models: [User, Room, RoomMember, Booking, BookingParticipant],
     dialectOptions: {
         ssl: {
             require: true,
-            rejectUnauthorized: false,
+            rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED,
         },
     },
+});
+
+export const umzug = new Umzug({
+    migrations: { glob: 'src/migrations/*.ts' },
+    context: sequelize.getQueryInterface(),
+    storage: new SequelizeStorage({ sequelize }),
+    logger: console,
 });
 
 export const connectDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('Connected to Neon PostgreSQL successfully');
-
-        await sequelize.sync({ alter: true });
-        console.log('Database synchronized');
+        await umzug.up();
+        console.log('Database migrations verified');
     } catch (error) {
         console.error('Unable to connect to the database:', error);
         process.exit(1);

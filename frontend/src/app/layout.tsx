@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import StoreProvider from '@/providers/StoreProvider';
-import AuthGuard from '@/components/AuthGuard';
+import AuthProvider from '@/components/AuthProvider';
 import Navbar from '@/components/Navbar';
 import { Toaster } from 'react-hot-toast';
 
@@ -19,15 +19,16 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <body className={inter.className} suppressHydrationWarning>
+        <html lang="en">
+            <body className={inter.className}>
                 <StoreProvider>
-                    <AuthGuard>
+
+                    <AuthProvider>
                         <div className="min-h-screen bg-gray-50">
                             <Navbar />
                             {children}
                         </div>
-                    </AuthGuard>
+                    </AuthProvider>
                     <Toaster position="top-right" />
                 </StoreProvider>
             </body>

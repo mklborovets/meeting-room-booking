@@ -17,6 +17,12 @@ export enum RoomRole {
 @Table({
     tableName: 'room_members',
     timestamps: true,
+    indexes: [
+        {
+            unique: true,
+            fields: ['roomId', 'userId'],
+        },
+    ],
 })
 export class RoomMember extends Model {
     @Column({
@@ -24,7 +30,7 @@ export class RoomMember extends Model {
         defaultValue: DataType.UUIDV4,
         primaryKey: true,
     })
-    id!: string;
+    declare id: string;
 
     @ForeignKey(() => Room)
     @Column({

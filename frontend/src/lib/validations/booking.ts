@@ -10,14 +10,18 @@ export const bookingSchema = z
             .string()
             .max(500, 'Description must be under 500 characters')
             .optional(),
-        startTime: z.string().min(1, 'Start time is required'),
-        endTime: z.string().min(1, 'End time is required'),
+        startTime: z.coerce.date({
+            required_error: "Start time is required",
+            invalid_type_error: "That's not a valid date",
+        }),
+        endTime: z.coerce.date({
+            required_error: "End time is required",
+            invalid_type_error: "That's not a valid date",
+        }),
     })
     .refine(
         (data) => {
-            const start = new Date(data.startTime).getTime();
-            const end = new Date(data.endTime).getTime();
-            return !isNaN(start) && !isNaN(end) && end > start;
+            return data.endTime > data.startTime;
         },
         {
             message: 'End time must be after start time',

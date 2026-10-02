@@ -8,17 +8,25 @@ import { logout } from '@/store/slices/authSlice';
 import { baseApi } from '@/store/api/baseApi';
 import toast from 'react-hot-toast';
 
+import { useLogoutMutation } from '@/store/api/authApi';
+
 export default function Navbar() {
     const router = useRouter();
     const pathname = usePathname();
     const dispatch = useAppDispatch();
     const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+    const [logoutApi] = useLogoutMutation();
 
     if (!isAuthenticated || pathname === '/login' || pathname === '/register') {
         return null;
     }
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await logoutApi().unwrap();
+        } catch (error) {
+            console.error('Logout failed on backend:', error);
+        }
         dispatch(logout());
         dispatch(baseApi.util.resetApiState());
         toast.success('Logged out successfully');
