@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import {
     Booking,
     BookingParticipant,
@@ -12,36 +12,15 @@ import {
     CreateBookingInput,
     UpdateBookingInput,
 } from '../schemas/booking.schema';
-import { checkRoomPermission } from '../middlewares/roomRole.middleware';
+import { checkRoomPermission } from '../utils/permissions';
 
 export class BookingService {
-    private static async verifyRoomRole(
-        roomId: string,
-        userId: string,
-        allowedRoles: RoomRole[]
-    ) {
-        const room = await Room.findByPk(roomId);
-        if (!room) {
-            throw new ApiError(404, 'Meeting room not found');
-        }
-
-        const membership = await RoomMember.findOne({
-            where: { roomId, userId },
-        });
-
-        if (!membership || !allowedRoles.includes(membership.role)) {
-            throw new ApiError(
-                403,
-                'You do not have permission to perform this action in this room'
-            );
-        }
-    }
-
     private static async checkTimeConflict(
         roomId: string,
         startTime: Date,
         endTime: Date,
-        excludeBookingId?: string
+        excludeBookingId?: string,
+        transaction?: Transaction
     ) {
         const conflictingBooking = await Booking.findOne({
             where: {
@@ -52,6 +31,7 @@ export class BookingService {
                     { endTime: { [Op.gt]: startTime } },
                 ],
             },
+            transaction,
         });
 
         if (conflictingBooking) {
@@ -109,14 +89,14 @@ export class BookingService {
     }
 
     static async createBooking(userId: string, data: CreateBookingInput) {
-        await checkRoomPermission(data.roomId, userId, [RoomRole.ADMIN, RoomRole.USER]);
+        await checkRoomPermission(data.roomId, userId, [RoomRole.ADMIN]);
 
         const startTime = new Date(data.startTime);
         const endTime = new Date(data.endTime);
 
-        await this.checkTimeConflict(data.roomId, startTime, endTime);
-
         const booking = await Booking.sequelize!.transaction(async (t) => {
+            await this.checkTimeConflict(data.roomId, startTime, endTime, undefined, t);
+
             const newBooking = await Booking.create(
                 {
                     roomId: data.roomId,
@@ -153,31 +133,44 @@ export class BookingService {
             throw new ApiError(404, 'Booking not found');
         }
 
-        if (booking.createdBy !== userId) {
-            await checkRoomPermission(booking.roomId, userId, [RoomRole.ADMIN]);
-        }
+        await checkRoomPermission(booking.roomId, userId, [RoomRole.ADMIN]);
 
         const newStartTime = data.startTime
             ? new Date(data.startTime)
             : booking.startTime;
         const newEndTime = data.endTime ? new Date(data.endTime) : booking.endTime;
 
+        if (newStartTime < new Date()) {
+            throw new ApiError(400, 'Start time cannot be in the past');
+        }
+
         if (newStartTime >= newEndTime) {
             throw new ApiError(400, 'endTime must be after startTime');
         }
 
-        await this.checkTimeConflict(
-            booking.roomId,
-            newStartTime,
-            newEndTime,
-            booking.id
-        );
+        const durationMs = newEndTime.getTime() - newStartTime.getTime();
+        if (durationMs > 12 * 60 * 60 * 1000) {
+            throw new ApiError(400, 'Meeting duration cannot exceed 12 hours');
+        }
 
-        await booking.update({
-            title: data.title ?? booking.title,
-            description: data.description ?? booking.description,
-            startTime: newStartTime,
-            endTime: newEndTime,
+        await Booking.sequelize!.transaction(async (t) => {
+            await this.checkTimeConflict(
+                booking.roomId,
+                newStartTime,
+                newEndTime,
+                booking.id,
+                t
+            );
+
+            await booking.update(
+                {
+                    title: data.title ?? booking.title,
+                    description: data.description ?? booking.description,
+                    startTime: newStartTime,
+                    endTime: newEndTime,
+                },
+                { transaction: t }
+            );
         });
 
         return this.getBookingById(booking.id);
@@ -189,9 +182,7 @@ export class BookingService {
             throw new ApiError(404, 'Booking not found');
         }
 
-        if (booking.createdBy !== userId) {
-            await checkRoomPermission(booking.roomId, userId, [RoomRole.ADMIN]);
-        }
+        await checkRoomPermission(booking.roomId, userId, [RoomRole.ADMIN]);
         await booking.destroy();
     }
 

@@ -1,6 +1,7 @@
 import { sequelize } from '../config/database';
 import { Room, RoomMember, RoomRole, User, Booking } from '../models';
 import { ApiError } from '../errors/ApiError';
+import { checkRoomPermission } from '../utils/permissions';
 import {
     CreateRoomInput,
     UpdateRoomInput,
@@ -9,45 +10,36 @@ import {
 
 export class RoomService {
     static async createRoom(userId: string, data: CreateRoomInput) {
-        const transaction = await sequelize.transaction();
-
-        try {
-            const room = await Room.create(
+        const room = await sequelize.transaction(async (t) => {
+            const newRoom = await Room.create(
                 {
                     name: data.name,
                     description: data.description || '',
                     createdBy: userId,
                 },
-                { transaction }
+                { transaction: t }
             );
 
             await RoomMember.create(
                 {
-                    roomId: room.id,
+                    roomId: newRoom.id,
                     userId,
                     role: RoomRole.ADMIN,
                 },
-                { transaction }
+                { transaction: t }
             );
 
-            await transaction.commit();
-            return this.getRoomById(room.id);
-        } catch (error) {
-            await transaction.rollback();
-            throw error;
-        }
+            return newRoom;
+        });
+
+        return this.getRoomById(room.id, userId);
     }
 
     static async getAllRooms(userId: string) {
-        const memberships = await RoomMember.findAll({ where: { userId } });
-        const roomIds = memberships.map(m => m.roomId);
-
-        if (roomIds.length === 0) {
-            return [];
-        }
-
         return Room.findAll({
-            where: { id: roomIds },
+            where: {
+                '$members.userId$': userId
+            },
             include: [
                 {
                     model: User,
@@ -69,7 +61,9 @@ export class RoomService {
         });
     }
 
-    static async getRoomById(roomId: string) {
+    static async getRoomById(roomId: string, userId: string) {
+        await checkRoomPermission(roomId, userId, [RoomRole.ADMIN, RoomRole.USER]);
+
         const room = await Room.findByPk(roomId, {
             include: [
                 {
@@ -97,17 +91,19 @@ export class RoomService {
         return room;
     }
 
-    static async updateRoom(roomId: string, data: UpdateRoomInput) {
+    static async updateRoom(roomId: string, userId: string, data: UpdateRoomInput) {
+        await checkRoomPermission(roomId, userId, [RoomRole.ADMIN]);
         const room = await Room.findByPk(roomId);
         if (!room) {
             throw new ApiError(404, 'Meeting room not found');
         }
 
         await room.update(data);
-        return this.getRoomById(roomId);
+        return this.getRoomById(roomId, userId);
     }
 
-    static async deleteRoom(roomId: string) {
+    static async deleteRoom(roomId: string, userId: string) {
+        await checkRoomPermission(roomId, userId, [RoomRole.ADMIN]);
         const room = await Room.findByPk(roomId);
         if (!room) {
             throw new ApiError(404, 'Meeting room not found');
@@ -117,6 +113,7 @@ export class RoomService {
     }
 
     static async addMemberByEmail(roomId: string, requesterUserId: string, data: AddRoomMemberInput) {
+        await checkRoomPermission(roomId, requesterUserId, [RoomRole.ADMIN]);
         const user = await User.findOne({ where: { email: data.email } });
         if (!user) {
             throw new ApiError(404, 'User with this email does not exist');
@@ -144,10 +141,11 @@ export class RoomService {
             });
         }
 
-        return this.getRoomById(roomId);
+        return this.getRoomById(roomId, requesterUserId);
     }
 
     static async removeMember(roomId: string, targetUserId: string, requesterUserId: string) {
+        await checkRoomPermission(roomId, requesterUserId, [RoomRole.ADMIN]);
         const room = await Room.findByPk(roomId);
         if (!room) {
             throw new ApiError(404, 'Meeting room not found');

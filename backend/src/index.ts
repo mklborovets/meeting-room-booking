@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/database';
 import { errorHandler } from './middlewares/error.middleware';
+import { ApiError } from './errors/ApiError';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
 import bookingRoutes from './routes/booking.routes';
@@ -16,7 +17,7 @@ const PORT = env.PORT;
 app.use(helmet());
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: env.FRONTEND_URL,
         credentials: true,
     })
 );
@@ -30,6 +31,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
+
+app.use((req, res, next) => {
+    next(new ApiError(404, `Route ${req.originalUrl} not found`));
+});
 
 app.use(errorHandler);
 

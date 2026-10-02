@@ -9,7 +9,6 @@ declare global {
                 email: string;
                 name: string;
             };
-            roomRole?: RoomRole;
         }
     }
 }

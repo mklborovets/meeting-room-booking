@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
-import { ValidationError, DatabaseError } from 'sequelize';
+import { ValidationError, DatabaseError, UniqueConstraintError } from 'sequelize';
 
 import { ApiError } from '../errors/ApiError';
 
@@ -26,9 +26,19 @@ export const errorHandler = (
         });
     }
 
-    if (err instanceof ValidationError) {
+    if (err instanceof UniqueConstraintError) {
         return res.status(409).json({
-            message: 'Database validation error or duplicate entry',
+            message: 'Duplicate entry',
+            errors: err.errors.map((e) => ({
+                field: e.path,
+                message: e.message,
+            })),
+        });
+    }
+
+    if (err instanceof ValidationError) {
+        return res.status(400).json({
+            message: 'Database validation error',
             errors: err.errors.map((e) => ({
                 field: e.path,
                 message: e.message,

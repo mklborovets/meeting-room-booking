@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import { Umzug, SequelizeStorage } from 'umzug';
+import path from 'path';
 import {
     User,
     Room,
@@ -13,16 +14,16 @@ export const sequelize = new Sequelize(env.DATABASE_URL, {
     dialect: 'postgres',
     logging: false,
     models: [User, Room, RoomMember, Booking, BookingParticipant],
-    dialectOptions: {
+    dialectOptions: env.DB_SSL ? {
         ssl: {
             require: true,
             rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED,
         },
-    },
+    } : undefined,
 });
 
 export const umzug = new Umzug({
-    migrations: { glob: 'src/migrations/*.ts' },
+    migrations: { glob: path.join(__dirname, '../migrations/*.{ts,js}').replace(/\\/g, '/') },
     context: sequelize.getQueryInterface(),
     storage: new SequelizeStorage({ sequelize }),
     logger: console,
@@ -31,7 +32,7 @@ export const umzug = new Umzug({
 export const connectDB = async () => {
     try {
         await sequelize.authenticate();
-        console.log('Connected to Neon PostgreSQL successfully');
+        console.log('Connected to PostgreSQL successfully');
         await umzug.up();
         console.log('Database migrations verified');
     } catch (error) {

@@ -17,7 +17,7 @@ import { Booking } from '@/types';
 import BookingModal from '@/components/bookings/BookingModal';
 import RoomMembersModal from '@/components/rooms/RoomMembersModal';
 import { RoomHeader } from '@/components/rooms/RoomHeader';
-import { BookingList } from '@/components/bookings/BookingList';
+import { BookingSchedule } from '@/components/bookings/BookingSchedule';
 import { getRoomRole } from '@/lib/roles';
 import { getApiErrorMessage } from '@/lib/error';
 
@@ -54,10 +54,7 @@ export default function RoomBookingsPage() {
 
     const isRoomAdmin = getRoomRole(room, currentUser).isAdmin;
 
-    const canManageBooking = (booking: Booking) => {
-        if (!currentUser) return false;
-        return isRoomAdmin || booking.createdBy === currentUser.id;
-    };
+
 
     const handleOpenCreate = () => {
         setSelectedBooking(null);
@@ -158,6 +155,7 @@ export default function RoomBookingsPage() {
                 isRoomAdmin={isRoomAdmin}
                 onBookRoom={handleOpenCreate}
                 onMembersClick={() => setIsMembersModalOpen(true)}
+                bookings={bookings || []}
             />
 
             {isBookingsError && (
@@ -167,37 +165,16 @@ export default function RoomBookingsPage() {
             )}
 
             {!isBookingsError && (
-                <>
-                    <BookingList
-                        title="Upcoming Bookings"
-                        description="Scheduled meetings that have not yet concluded."
-                        bookings={futureBookings}
-                        currentUser={currentUser}
-                        isRoomAdmin={isRoomAdmin}
-                        onEdit={handleOpenEdit}
-                        onDelete={handleDeleteBooking}
-                        onToggleParticipation={handleToggleParticipation}
-                        isToggling={isToggling}
-                        onBookRoom={handleOpenCreate}
-                        showEmptyStateBookButton={true}
-                    />
-
-                    {pastBookings.length > 0 && (
-                        <div className="mt-12">
-                            <BookingList
-                                title="Past Bookings"
-                                description="Meetings that have already concluded."
-                                bookings={pastBookings}
-                                currentUser={currentUser}
-                                isRoomAdmin={isRoomAdmin}
-                                onEdit={handleOpenEdit}
-                                onDelete={handleDeleteBooking}
-                                onToggleParticipation={handleToggleParticipation}
-                                isToggling={isToggling}
-                            />
-                        </div>
-                    )}
-                </>
+                <BookingSchedule
+                    bookings={bookings || []}
+                    currentUser={currentUser}
+                    isRoomAdmin={isRoomAdmin}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleDeleteBooking}
+                    onToggleParticipation={handleToggleParticipation}
+                    isToggling={isToggling}
+                    onBookRoom={handleOpenCreate}
+                />
             )}
 
             <BookingModal

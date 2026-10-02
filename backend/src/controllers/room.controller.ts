@@ -13,20 +13,21 @@ export class RoomController {
     }
 
     static async getById(req: Request, res: Response) {
-        const room = await RoomService.getRoomById(req.params.id as string);
+        const room = await RoomService.getRoomById(req.params.id as string, req.user!.id);
         res.status(200).json(room);
     }
 
     static async update(req: Request, res: Response) {
         const room = await RoomService.updateRoom(
             req.params.id as string,
+            req.user!.id,
             req.body
         );
         res.status(200).json(room);
     }
 
     static async delete(req: Request, res: Response) {
-        await RoomService.deleteRoom(req.params.id as string);
+        await RoomService.deleteRoom(req.params.id as string, req.user!.id);
         res.status(204).send();
     }
 

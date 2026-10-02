@@ -4,7 +4,7 @@ import { LoginFormValues, RegisterFormValues } from '@/lib/validations/auth';
 
 export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        register: builder.mutation<AuthResponse, RegisterFormValues>({
+        register: builder.mutation<AuthResponse, Omit<RegisterFormValues, 'confirmPassword'>>({
             query: (body) => ({
                 url: '/auth/register',
                 method: 'POST',

@@ -28,7 +28,7 @@ export function BookingCard({
     const participants = booking.participants || [];
 
     const isParticipating = participants.some((p) => p.id === currentUser?.id);
-    const canEdit = currentUser && (isRoomAdmin || booking.createdBy === currentUser.id);
+    const canEdit = Boolean(currentUser && isRoomAdmin);
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">

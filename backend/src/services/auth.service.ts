@@ -8,7 +8,7 @@ import { env } from '../config/env';
 export class AuthService {
     private static generateToken(user: User): string {
         const options: SignOptions = {
-            expiresIn: '7d',
+            expiresIn: env.JWT_EXPIRES_IN as any,
         };
 
         return jwt.sign(

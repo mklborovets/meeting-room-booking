@@ -30,6 +30,11 @@ export const authenticate = (
 
         next();
     } catch (error) {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
         if (error instanceof ApiError) {
             return next(error);
         }

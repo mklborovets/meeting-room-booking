@@ -23,6 +23,9 @@ const baseQueryWithReauth: BaseQueryFn<
     if (result.error && result.error.status === 401) {
         api.dispatch(logout());
         api.dispatch({ type: 'api/resetApiState' });
+        if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+        }
     }
 
     return result;
