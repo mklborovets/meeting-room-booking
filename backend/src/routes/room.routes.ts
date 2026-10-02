@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { RoomController } from '../controllers/room.controller';
-import { authenticate } from '../middlewares/auth.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
 import {
     createRoomSchema,
     updateRoomSchema,

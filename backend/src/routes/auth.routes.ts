@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthController } from '../controllers/auth.controller';
-import { validate } from '../middlewares/validate.middleware';
-import { authenticate } from '../middlewares/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 import { registerSchema, loginSchema } from '../schemas/auth.schema';
 
 const router = Router();

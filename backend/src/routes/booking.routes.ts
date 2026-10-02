@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { BookingController } from '../controllers/booking.controller';
-import { authenticate } from '../middlewares/auth.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
 import {
     createBookingSchema,
     updateBookingSchema,

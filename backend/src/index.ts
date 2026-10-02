@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/database';
-import { errorHandler } from './middlewares/error.middleware';
+import { errorHandler } from './middleware/error.middleware';
 import { ApiError } from './errors/ApiError';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
