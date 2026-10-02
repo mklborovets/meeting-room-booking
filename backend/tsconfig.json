@@ -3,7 +3,6 @@
     "target": "ES2022",
     "useDefineForClassFields": false,
     "module": "CommonJS",
-    "moduleResolution": "node",
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,

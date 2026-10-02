@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 import { errorHandler } from './middlewares/error.middleware';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
+
+app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
