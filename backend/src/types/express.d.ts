@@ -1,4 +1,5 @@
 import 'express';
+import { RoomRole } from '../models';
 
 declare global {
     namespace Express {
@@ -8,6 +9,7 @@ declare global {
                 email: string;
                 name: string;
             };
+            roomRole?: RoomRole;
         }
     }
 }
