@@ -1,5 +1,5 @@
 import { sequelize } from '../config/database';
-import { Room, RoomMember, RoomRole, User, Booking } from '../models';
+import { Room, RoomMember, RoomRole, User } from '../models';
 import { ApiError } from '../errors/ApiError';
 import { checkRoomPermission } from '../utils/permissions';
 import {
@@ -36,9 +36,17 @@ export class RoomService {
     }
 
     static async getAllRooms(userId: string) {
+        const memberships = await RoomMember.findAll({
+            where: { userId },
+            attributes: ['roomId'],
+        });
+        const roomIds = memberships.map(m => m.roomId);
+
+        if (roomIds.length === 0) return [];
+
         return Room.findAll({
             where: {
-                '$members.userId$': userId
+                id: roomIds
             },
             include: [
                 {

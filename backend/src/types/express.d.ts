@@ -1,5 +1,4 @@
 import 'express';
-import { RoomRole } from '../models';
 
 declare global {
     namespace Express {

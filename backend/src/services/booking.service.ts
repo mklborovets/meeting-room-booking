@@ -2,8 +2,6 @@ import { Op, Transaction } from 'sequelize';
 import {
     Booking,
     BookingParticipant,
-    Room,
-    RoomMember,
     RoomRole,
     User,
 } from '../models';
@@ -140,7 +138,9 @@ export class BookingService {
             : booking.startTime;
         const newEndTime = data.endTime ? new Date(data.endTime) : booking.endTime;
 
-        if (newStartTime < new Date()) {
+        const isStartTimeChanged = newStartTime.getTime() !== booking.startTime.getTime();
+
+        if (isStartTimeChanged && newStartTime < new Date(Date.now() - 5 * 60 * 1000)) {
             throw new ApiError(400, 'Start time cannot be in the past');
         }
 

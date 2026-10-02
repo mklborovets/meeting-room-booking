@@ -35,10 +35,6 @@ export default function HomePage() {
     const [membersRoom, setMembersRoom] = useState<Room | null>(null);
     const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
 
-    const checkIsRoomAdmin = (room: Room) => {
-        return getRoomRole(room, currentUser).isAdmin;
-    };
-
     const handleOpenCreate = () => {
         setSelectedRoom(null);
         setIsRoomModalOpen(true);
@@ -117,7 +113,7 @@ export default function HomePage() {
             {!isLoading && !isError && rooms && rooms.length > 0 && (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {rooms.map((room) => {
-                        const isAdmin = checkIsRoomAdmin(room);
+                        const isAdmin = getRoomRole(room, currentUser).isAdmin;
 
                         return (
                             <div

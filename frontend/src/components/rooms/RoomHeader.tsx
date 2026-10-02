@@ -28,7 +28,6 @@ export function RoomHeader({
         );
 
         if (currentBooking) {
-            const endString = currentBooking.endTime.toString().slice(11, 16);
             statusBadge = (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 px-2.5 py-0.5 text-xs font-medium border border-red-200">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />

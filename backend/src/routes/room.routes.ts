@@ -7,8 +7,6 @@ import {
     updateRoomSchema,
     addRoomMemberSchema,
 } from '../schemas/room.schema';
-import { RoomRole } from '../models';
-
 import { BookingController } from '../controllers/booking.controller';
 
 const router = Router();

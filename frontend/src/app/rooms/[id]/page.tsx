@@ -32,6 +32,7 @@ export default function RoomBookingsPage() {
         data: room,
         isLoading: isRoomLoading,
         isError: isRoomError,
+        error: roomError,
     } = useGetRoomByIdQuery(roomId, {
         skip: !roomId,
     });
@@ -56,8 +57,6 @@ export default function RoomBookingsPage() {
     const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
     const isRoomAdmin = getRoomRole(room, currentUser).isAdmin;
-
-
 
     const handleOpenCreate = () => {
         setSelectedBooking(null);
@@ -97,15 +96,6 @@ export default function RoomBookingsPage() {
         }
     };
 
-    const { futureBookings, pastBookings } = useMemo(() => {
-        const now = new Date().getTime();
-        const all = [...(bookings || [])];
-        return {
-            futureBookings: all.filter((b) => new Date(b.endTime).getTime() >= now),
-            pastBookings: all.filter((b) => new Date(b.endTime).getTime() < now).reverse(),
-        };
-    }, [bookings]);
-
     if (isRoomLoading || isBookingsLoading) {
         return (
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -123,10 +113,11 @@ export default function RoomBookingsPage() {
     }
 
     if (isRoomError || !room) {
+        const errorMessage = isRoomError ? getApiErrorMessage(roomError, 'Room not found or you do not have permission to view it.') : 'Room not found or you do not have permission to view it.';
         return (
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
-                    Room not found or you do not have permission to view it.
+                    {errorMessage}
                 </div>
                 <div className="mt-4 text-center">
                     <Link

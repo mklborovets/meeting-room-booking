@@ -21,15 +21,6 @@ export const bookingSchema = z
     })
     .refine(
         (data) => {
-            return data.startTime.getTime() >= Date.now() - 5 * 60 * 1000;
-        },
-        {
-            message: 'Start time cannot be in the past',
-            path: ['startTime'],
-        }
-    )
-    .refine(
-        (data) => {
             return data.endTime > data.startTime;
         },
         {

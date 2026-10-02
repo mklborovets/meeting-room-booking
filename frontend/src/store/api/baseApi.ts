@@ -18,11 +18,14 @@ const baseQueryWithReauth: BaseQueryFn<
     unknown,
     FetchBaseQueryError
 > = async (args, api, extraOptions) => {
-    let result = await baseQuery(args, api, extraOptions);
+    const result = await baseQuery(args, api, extraOptions);
 
-    if (result.error && result.error.status === 401) {
+    const url = typeof args === 'string' ? args : args.url;
+    const isAuthRequest = url.startsWith('/auth/login') || url.startsWith('/auth/register');
+
+    if (result.error && result.error.status === 401 && !isAuthRequest) {
         api.dispatch(logout());
-        api.dispatch({ type: 'api/resetApiState' });
+        api.dispatch(baseApi.util.resetApiState());
         if (typeof window !== 'undefined') {
             window.location.href = '/login';
         }

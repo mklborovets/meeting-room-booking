@@ -44,6 +44,7 @@ export default function BookingModal({
         handleSubmit,
         reset,
         control,
+        setError,
         formState: { errors },
     } = useForm<BookingFormValues>({
         resolver: zodResolver(bookingSchema),
@@ -86,6 +87,22 @@ export default function BookingModal({
     const isLoading = isCreating || isUpdating;
 
     const onSubmit = async (data: BookingFormValues) => {
+        const gracePeriod = Date.now() - 5 * 60 * 1000;
+        const isStartTimeChanged =
+            isEditing &&
+            booking &&
+            data.startTime.getTime() !== new Date(booking.startTime).getTime();
+
+        if (!isEditing && data.startTime.getTime() < gracePeriod) {
+            setError('startTime', { message: 'Start time cannot be in the past' });
+            return;
+        }
+
+        if (isStartTimeChanged && data.startTime.getTime() < gracePeriod) {
+            setError('startTime', { message: 'Start time cannot be in the past' });
+            return;
+        }
+
         try {
             const payload = {
                 title: data.title,
